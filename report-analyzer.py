@@ -11,7 +11,7 @@ try:
 	arguments = sys.argv[1:NUMBER_OF_ARGUMENTS]
 	trg = arguments[0]
 	period = arguments[1]
-	fieldnames = arguments[2].split(',')
+	fieldnames = arguments[2].split(',') if not len(arguments[2]) == 0 or not arguments[2] == '' else []
 	printing_fields = arguments[3].split(',')
 
 	if not len(sys.argv) == NUMBER_OF_ARGUMENTS:
@@ -38,7 +38,11 @@ class ReportAnalyzer:
 		"EMP",
 		"FAM",
 		"NEET",
-		"UNEMP"
+		"UNEMP",
+		"INV",
+		"NEETAX",
+		"EMPTX",
+		"CONS"
 	]
 	def __init__(self, target=trg, period=period, fieldnames=fieldnames):
 		try:
@@ -76,6 +80,7 @@ class ReportAnalyzer:
 	def __read__(self, path, fieldnames):
 		data = {}
 		params = []
+		n_row = 0
 		for fieldname in fieldnames:
 			if '=' in fieldname:
 				key = fieldname.split('=')[0]
@@ -88,16 +93,22 @@ class ReportAnalyzer:
 			with open(path, 'r') as f:
 				csvreader = csv.DictReader(f=f)
 				for csv_field in csvreader:
+					# if params == []:
+					# 	data.update({f"{n_row}": csv_field})
+					# 	n_row += 1
+
 					for param in params:
 						try:
 							key = param.split('=')[0]
 							value = param.split('=')[1]
 
 							if csv_field[key] == value or value == '':
-								data.update({f"{csv_field['Seleziona periodo']}-{param}": csv_field})
+								data.update({f"{n_row}-{param}": csv_field})
 						except KeyError as ke:
 							print(f"ERROR: key {ke.args} not found in the csv file")
 							continue
+						finally:
+							n_row += 1
 				
 				for param in params:
 					key = param.split('=')[0]
@@ -105,7 +116,7 @@ class ReportAnalyzer:
 					d_fields = []
 
 					for field in data:
-						if not data[field][key] == value:
+						if not data[field][key] == value and not value == '':
 							d_fields.append(field)
 					
 					if bool(d_fields):
