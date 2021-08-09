@@ -144,9 +144,12 @@ class ReportAnalyzer:
 		else:
 			return None
 
-if __name__ == "__main__":
+def main():
 	ra = ReportAnalyzer()
 	data = ra.getData()
 	for n in range( len(printing_fields) ):
 		printing_fields[n] = printing_fields[n].strip()
 	ra.printData(args=printing_fields)
+
+if __name__ == "__main__":
+	main()
