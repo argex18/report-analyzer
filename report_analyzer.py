@@ -1,39 +1,52 @@
 try:
-	import csv
-	import sys
-	import os
+	import csv, sys, os, argparse, getopt
 except ImportError as ie:
 	print(f"Error during importing {ie.args} module")
 	sys.exit(-1)
 
 CSV_DIR = "csv/"
+USAGE = "BASIC USAGE of report-analyzer:\n\t" \
+		"['-h', '--help'] => show info about the script\n\t" \
+		"['-t', '--target'] => set the target dataset on which to execute the analysis\n\t" \
+		"['-p', '--period'] => set the period on which to perform the analysis\n\t" \
+		"['-f', '--fieldnames'] => set the fieldnames to extract from the set\n\t" \
+		"['--printingfields'] => set the fields to print\n"
 
 if __name__ == "__main__":
 	try:
-		NUMBER_OF_ARGUMENTS = 5
-		arguments = sys.argv[1:NUMBER_OF_ARGUMENTS]
-		trg = arguments[0]
-		prd = arguments[1]
-		fldnames = arguments[2].split(',') if not len(arguments[2]) == 0 or not arguments[2] == '' else []
-		printing_fields = arguments[3].split(',')
+		arguments = sys.argv[1:]
+		options, args = getopt.getopt(
+			arguments,
+			"hvt:p:f:s:",
+			["help", "verbose", "target=", "period=", "fieldnames=", "printingfields="]
+		)
+		for option, arg in options:
+			if option in ("-h", "--help"):
+				print(USAGE, end='')
+				sys.exit(0)
+			elif option in ("-v", "--verbose"):
+				verbose = True
+			elif option in ("-t", "--target"):
+				trg = arg
+			elif option in ("-p", "--period"):
+				prd = arg
+			elif option in ("-f", "--fieldnames"):
+				fldnames = arg.split(',')
+			elif option in ("-s", "--printingfields"):
+				printing_fields = arg.split(',')
+			else:
+				assert False, "not recognized option"
 
-		if not len(sys.argv) == NUMBER_OF_ARGUMENTS:
-			raise IndexError("ERROR: invalid number of arguments passed at the command line")
-	except IndexError as ixe:
-		try:
-			print(f"{ixe.args}\n\nArguments:\n\ttarget: What set to look in = {trg}\n\tperiod: What period to analyze = {prd}\n\tfieldnames: What fields to get from the set = {fldnames}\n\tprinting_fields: What fields to print = {printing_fields}\n\n", end='')
-			if len(sys.argv) > NUMBER_OF_ARGUMENTS:
-				inv_args = sys.argv[NUMBER_OF_ARGUMENTS:]
-				print("Unrecognized arguments: ", end='')
-				for inv_arg in inv_args:
-					print(f"{inv_arg};", end=' ')
-		except NameError as ne:
-			print(ne.args)
-		finally:
-			sys.exit(-1)
+		# print(len(args))
+
+	except getopt.GetoptError as ge:
+		print(f"ERROR: option {ge.opt} results in '{ge.msg}'")
+		print(USAGE, end='')
+		sys.exit(-1)
 	except Exception as e:
 		print(e.args)
 		sys.exit(-1)
+
 
 class ReportAnalyzer:
 	__SETS = [
@@ -47,6 +60,7 @@ class ReportAnalyzer:
 		"EMPTX",
 		"CONS"
 	]
+
 	def __init__(self, target, period, fieldnames):
 		try:
 			if not target in ReportAnalyzer.__SETS:
@@ -72,12 +86,12 @@ class ReportAnalyzer:
 	# Getter methods
 	def getData(self):
 		return self.data
-	def getTarget(self):
-		return self.target
-	def getPeriod(self):
-		return self.period
-	def getPath(self):
-		return self.path
+	# def getTarget(self):
+	# 	return self.target
+	# def getPeriod(self):
+	# 	return self.period
+	# def getPath(self):
+	# 	return self.path
 
 	# __readSET__ methods
 	def __read__(self, path, fieldnames):
@@ -96,9 +110,6 @@ class ReportAnalyzer:
 			with open(path, 'r') as f:
 				csvreader = csv.DictReader(f=f)
 				for csv_field in csvreader:
-					# if params == []:
-					# 	data.update({f"{n_row}": csv_field})
-					# 	n_row += 1
 
 					for param in params:
 						try:
@@ -147,12 +158,14 @@ class ReportAnalyzer:
 		else:
 			return None
 
+
 def main():
 	ra = ReportAnalyzer(target=trg, period=prd, fieldnames=fldnames)
 	data = ra.getData()
 	for n in range( len(printing_fields) ):
 		printing_fields[n] = printing_fields[n].strip()
 	ra.printData(args=printing_fields)
+
 
 if __name__ == "__main__":
 	main()
